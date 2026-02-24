@@ -1,0 +1,6 @@
+AI tutors are AI-powered, digital learning assistants that provide 24/7 personalized, real-time education and, adapting to a user's unique pace, strengths, and weaknesses to provide targeted feedback. These systems, often using Natural Language Processing and machine learning, support various subjects like math, coding, and languages by breaking down topics into manageable, bite-sized lessons
+Personalized Learning & 24/7 Support: AI tutors can analyze a student's strengths and weaknesses to tailor lessons, providing personalized learning paths and instant feedback, which helps in mastering difficult concepts.
+Improved Academic Performance: Studies indicate that AI tutoring systems can increase test scores, with one meta-analysis finding an average increase of 0.66 standard deviations compared to traditional classroom instruction.
+Scalability & Access: They provide affordable, accessible tutoring, addressing the need for individualized attention in overcrowded classrooms or for students in remote areas.
+Teacher Empowerment: AI tutors are designed to complement, not replace, teachers by handling routine tasks like grading, creating practice questions, and providing initial student support.
+Increased Engagement: Interactive elements like chatbots and virtual simulations (e.g., Khanmigo) make learning more engaging and interactive.

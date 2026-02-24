@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nexora - AI Tutor</title>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{background:#000;color:#fff}
+
+header{text-align:center;padding:35px 20px;background:#050816;box-shadow:0 0 40px rgba(0,119,255,.2)}
+header h1{font-size:2.7rem;letter-spacing:2px;animation:glowText 2s infinite alternate}
+header p{margin-top:10px;opacity:.8}
+
+main{max-width:950px;margin:40px auto;padding:0 20px}
+
+.card{background:#050816;padding:25px;margin-bottom:35px;border-radius:14px;border:1px solid #0077ff;box-shadow:0 0 25px rgba(0,119,255,.15);transition:.4s;animation:floatCard 4s ease-in-out infinite}
+.card:hover{box-shadow:0 0 45px rgba(0,119,255,.35);transform:translateY(-6px)}
+.card h2{margin-bottom:18px}
+
+input[type=file],input[type=text]{width:100%;padding:12px;margin-bottom:12px;border-radius:8px;border:1px solid #0077ff;background:#0b1120;color:#fff}
+input:focus{box-shadow:0 0 15px rgba(0,119,255,.5)}
+
+button{padding:12px 18px;background:#0077ff;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
+button:hover{transform:scale(1.08);box-shadow:0 0 20px rgba(0,119,255,.7)}
+
+.chat-box{height:230px;border:1px solid #0077ff;border-radius:10px;padding:15px;overflow-y:auto;background:#0b1120;margin-bottom:12px}
+.chat-input{display:flex;gap:12px}
+.chat-input input{flex:1}
+
+#quizContainer{margin-top:15px}
+.quiz-card {
+    border: 1px solid #00f2ff;
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
+    background-color: #111;
+}
+
+.quiz-card input {
+    padding: 8px;
+    margin-top: 8px;
+    background: black;
+    color: white;
+    border: 1px solid #00f2ff;
+}
+
+.quiz-card button {
+    margin-left: 10px;
+    padding: 8px 12px;
+    background-color: #0077ff;
+    border: none;
+    cursor: pointer;
+}
+#weakTopicsList{list-style:none;padding-left:0}
+#weakTopicsList li{padding:8px 0;border-bottom:1px solid rgba(0,119,255,.2)}
+
+footer{text-align:center;padding:20px;background:#050816;box-shadow:0 0 40px rgba(0,119,255,.2);margin-top:50px}
+
+@keyframes glowText{from{text-shadow:0 0 5px #0077ff}to{text-shadow:0 0 20px #0077ff}}
+@keyframes floatCard{0%{transform:translateY(0)}50%{transform:translateY(6px)}100%{transform:translateY(0)}}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>Nexora</h1>
+<p>Adaptive AI Tutor that Learns Your Weaknesses</p>
+</header>
+
+<main>
+
+<section class="card">
+<h2>Upload Study Material</h2>
+<input type="file" id="fileInput">
+<button onclick="uploadFile()">Upload</button>
+</section>
+
+<section class="card">
+<h2>Ask the AI Tutor</h2>
+<div class="chat-box" id="chatBox"></div>
+<div class="chat-input">
+<input type="text" id="questionInput" placeholder="Ask a question from your notes...">
+<button onclick="askAI()">Ask</button>
+</div>
+</section>
+
+<section class="card">
+<h2>Quiz Mode</h2>
+<button onclick="generateQuiz()">Generate Quiz</button>
+<div id="quizContainer"></div>
+</section>
+
+<section class="card">
+<h2>Detected Weak Topics</h2>
+<ul id="weakTopicsList">
+<li>No weak topics detected yet.</li>
+</ul>
+<button onclick="generateWeakQuiz()" class="weak-btn">
+Practice Weak Topics
+</button>
+</section>
+
+</main>
+
+<footer>
+Built for DevDash 2026 | Team Nexora
+</footer>
+
+<script>
+const API="http://127.0.0.1:5000";
+
+
+async function uploadFile(){
+let file=document.getElementById("fileInput").files[0];
+let form=new FormData();
+form.append("file",file);
+
+await fetch(API+"/upload",{method:"POST",body:form});
+alert("Uploaded!");
+}
+
+
+async function askAI(){
+let q=document.getElementById("questionInput").value;
+
+let res=await fetch(API+"/ask",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({question:q})
+});
+let data=await res.json();
+
+let chat=document.getElementById("chatBox");
+chat.innerHTML+=`<p><b>You:</b> ${q}</p>`;
+chat.innerHTML+=`<p><b>AI:</b> ${data.answer}</p>`;
+}
+
+
+let totalQuestions = 0;
+let score = 0;
+let answeredCount = 0;
+let weakTopics = {};
+
+async function generateQuiz() {
+    let res = await fetch(API + "/quiz");
+    let data = await res.json();
+
+    let div = document.getElementById("quizContainer");
+    div.innerHTML = "";
+
+    if (!data.quiz) {
+        div.innerHTML = `<p>${data.message}</p>`;
+        return;
+    }
+
+    score = 0;
+    answeredCount = 0;
+    totalQuestions = data.quiz.length;
+    window.currentQuiz = data.quiz;
+    weakTopics = {};
+
+    div.innerHTML += `<h2>Score: <span id="scoreValue">0</span> / ${totalQuestions}</h2>`;
+
+    data.quiz.forEach((item, index) => {
+        div.innerHTML += `
+            <div class="quiz-card">
+                <h3>Q${index + 1}: ${item.question}</h3>
+                <input type="text" id="answer${index}" placeholder="Your answer">
+                <button onclick="checkAnswer(${index}, '${item.answer}', this)">Submit</button>
+                <p id="result${index}"></p>
+            </div>
+        `;
+    });
+}
+
+function checkAnswer(index, correctAnswer, button) {
+    let input = document.getElementById(`answer${index}`);
+    let userAnswer = input.value.trim().toLowerCase();
+    let result = document.getElementById(`result${index}`);
+
+    if (button.disabled) return;
+
+    if (userAnswer === correctAnswer.toLowerCase()) {
+    result.innerHTML = "✅ Correct!";
+    score++;
+} else {
+    result.innerHTML = "❌ Incorrect. Correct answer: " + correctAnswer;
+
+    let topic = window.currentQuiz[index].topic;
+    weakTopics[topic] = (weakTopics[topic] || 0) + 1;
+}
+
+    answeredCount++;
+    document.getElementById("scoreValue").innerText = score;
+
+    // Disable further editing
+    button.disabled = true;
+    input.disabled = true;
+
+    // Visual fade
+    button.style.opacity = "0.6";
+    input.style.opacity = "0.6";
+
+    if (answeredCount === totalQuestions) {
+        showFinalScore();
+    }
+}
+function showFinalScore() {
+    let div = document.getElementById("quizContainer");
+
+    div.innerHTML += `
+        <div style="margin-top:20px;">
+            <h2>🎯 Final Score: ${score} / ${totalQuestions}</h2>
+            <button onclick="generateQuiz()">Try Again</button>
+        </div>
+    `;
+
+    updateWeakTopicsSection();
+}
+async function generateWeakQuiz() {
+
+    if (Object.keys(weakTopics).length === 0) {
+        alert("No weak topics detected yet.");
+        return;
+    }
+
+if (Object.keys(weakTopics).length === 0) {
+    alert("No weak topics detected yet.");
+    return;
+}
+
+let topics = Object.keys(weakTopics);
+
+// 🔥 Clear old weak data BEFORE starting new quiz
+weakTopics = {};
+updateWeakTopicsSection();
+
+score = 0;
+answeredCount = 0;
+    let res = await fetch(API + "/quiz_weak", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ topics: topics })
+    });
+
+    let data = await res.json();
+
+    if (!data.quiz) {
+        alert(data.message);
+        return;
+    }
+
+    window.currentQuiz = data.quiz;
+    score = 0;
+    answeredCount = 0;
+    totalQuestions = data.quiz.length;
+
+    let div = document.getElementById("quizContainer");
+    div.innerHTML = `<h2>Score: <span id="scoreValue">0</span> / ${totalQuestions}</h2>`;
+
+    data.quiz.forEach((item, index) => {
+        div.innerHTML += `
+            <div class="quiz-card">
+                <h3>Q${index + 1}: ${item.question}</h3>
+                <input type="text" id="answer${index}" placeholder="Your answer">
+                <button onclick="checkAnswer(${index}, '${item.answer}', this)">Submit</button>
+                <p id="result${index}"></p>
+            </div>
+        `;
+    });
+}
+
+function updateWeakTopicsSection() {
+    let weakList = document.getElementById("weakTopicsList");
+
+    if (!weakList) return;
+
+    weakList.innerHTML = "";
+
+    if (Object.keys(weakTopics).length === 0) {
+        weakList.innerHTML = "<li>No weak topics detected yet.</li>";
+        return;
+    }
+
+    for (let topic in weakTopics) {
+        weakList.innerHTML += `<li>${topic} (${weakTopics[topic]} mistakes)</li>`;
+    }
+}
+
+async function loadWeak(){
+let res=await fetch(API+"/weak");
+let data=await res.json();
+let ul=document.getElementById("weakTopicsList");
+ul.innerHTML="";
+data.weak.forEach(w=>ul.innerHTML+=`<li>${w}</li>`);
+}
+setInterval(loadWeak,3000);
+</script>
+
+</body>
+</html>
