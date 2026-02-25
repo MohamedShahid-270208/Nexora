@@ -1,39 +1,50 @@
-🔹 Project Title
-    Nexora
+# Nexora – AI Adaptive Learning System
 
-🔹 Description
-AI-powered adaptive learning system that generates quizzes from uploaded notes and reinforces weak topics.
+An intelligent quiz generator that transforms static notes into adaptive self-assessment.
 
-🔹 Features
+## Problem Statement
+Students often study passively from notes without identifying weak areas. There is no quick way to convert notes into interactive self-assessment tools.
 
-* Upload .txt notes
+## Solution
+Nexora generates quizzes from uploaded notes and analyzes user performance to identify weak topics for targeted practice.
 
-* Ask AI questions
+## Features
+- Upload .txt notes
+- AI-generated quiz from uploaded content
+- Score tracking system
+- Weak topic detection
+- Practice weak topics separately
+- Graceful handling of empty or invalid files
 
-* Auto quiz generation
+## Tech Stack
+- Python
+- Flask
+- HTML
+- CSS
+- JavaScript
 
-* Score tracking
+## Project Structure
+```
+Nexora/
+│
+├── backend.py
+├── templates/
+├── static/
+├── requirements.txt
+└── README.md
+```
 
-* Weak topic detection
-
-* Practice weak topics separately
-
-🔹 Tech Stack
-
-* Python
-
-* Flask
-
-* HTML
-
-* CSS
-
-* JavaScript
-
-🔹 How to Run
+## How to Run
+```
 git clone <repo-link>
 cd Nexora
 python -m venv venv
 venv\Scripts\activate
 pip install -r requirements.txt
 python backend.py
+```
+
+## Future Scope
+- Support for PDF and DOCX uploads
+- User authentication and progress tracking
+- Integration with advanced NLP models for improved question generation
